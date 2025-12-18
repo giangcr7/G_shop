@@ -5,8 +5,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Users } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-@Injectable()
 
+@Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users.name)
@@ -14,22 +14,21 @@ export class UsersService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    const { email, password, name } = createUserDto;
-
-    if (!password) {
+    if (!createUserDto.password) {
       throw new Error('Password is required');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    const user = new this.userModel({
-      email,
+    const user = await this.userModel.create({
+      email: createUserDto.email,
       password: hashedPassword,
-      name,
+      name: createUserDto.name,
     });
 
-    return user.save();
+    return user;
   }
+
   findAll() {
     return `This action returns all users`;
   }
@@ -46,4 +45,3 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 }
-
