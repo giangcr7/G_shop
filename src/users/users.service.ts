@@ -1,13 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
+import { InjectModel } from '@nestjs/mongoose';
+import { Users } from './schemas/user.schema';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 @Injectable()
-export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
 
+export class UsersService {
+  constructor(
+    @InjectModel(Users.name)
+    private readonly userModel: Model<Users>,
+  ) { }
+
+  async create(createUserDto: CreateUserDto) {
+    const { email, password, name } = createUserDto;
+
+    if (!password) {
+      throw new Error('Password is required');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new this.userModel({
+      email,
+      password: hashedPassword,
+      name,
+    });
+
+    return user.save();
+  }
   findAll() {
     return `This action returns all users`;
   }
@@ -24,3 +46,4 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 }
+
